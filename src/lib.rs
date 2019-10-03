@@ -1,8 +1,7 @@
 /*! 
-The trigram library computes the similarity of strings.
-prints out the trigram similarity of two strings
-using what appears to be the same algorithm used by Postgres.
-https://www.postgresql.org/docs/9.1/pgtrgm.html
+The trigram library computes the similarity of strings. The idea is to do
+something like the similarity function in the Postgresql pg_trgm extension:
+https://www.postgresql.org/docs/9.1/pgtrgm.html.
 */
 
 use std::collections::HashSet;
