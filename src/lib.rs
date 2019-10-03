@@ -7,17 +7,17 @@ https://www.postgresql.org/docs/9.1/pgtrgm.html.
 use std::collections::HashSet;
 use std::hash::Hash;
 
-fn distance(a: &String, b: &String) -> f32 {
+pub fn distance(a: &String, b: &String) -> f32 {
     1.0 - similarity(a, b)
 }
 
-fn similarity(a: &String, b: &String) -> f32 {
+pub fn similarity(a: &String, b: &String) -> f32 {
     let ta = trigrams(a);
     let tb = trigrams(b);
     return jaccard(ta, tb);
 }
 
-fn trigrams(s: &String) -> HashSet<String> {
+pub fn trigrams(s: &String) -> HashSet<String> {
     let mut ts = HashSet::new();
     let s = format!("{} ", s);
     let mut p1 = ' ';
@@ -32,12 +32,11 @@ fn trigrams(s: &String) -> HashSet<String> {
     ts
 }
 
-fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
+pub fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
     let i = s1.intersection(&s2).count() as f32;
     let u = s1.union(&s2).count() as f32;
     return i / u;
 }
-
 
 #[cfg(test)]
 mod tests {
