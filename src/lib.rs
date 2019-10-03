@@ -60,7 +60,17 @@ mod tests {
             for b in vb {
                 let b = b.to_string();
                 assert_eq!(similarity(&a, &b), 0.0, "checking that '{}' and '{}' have similarity of zero", a, b);
+                assert_eq!(similarity(&b, &a), 0.0, "checking that '{}' and '{}' have similarity of zero", b, a);
             }
         }
+    }
+
+    #[test]
+    fn fuzzy_matches() {
+        // Check for agreement with the answers given by the postgres pg_trgm similarity function.
+        assert_eq!(similarity(&"a".to_string(), &"ab".to_string()), 0.25, "checking a and ab");
+        assert_eq!(similarity(&"dancing bear".to_string(), &"dancing boar".to_string()), 0.625, "checking dancing bear and dancing boar");
+        assert_eq!(similarity(&"foo".to_string(), &"food".to_string()), 0.5, "checking foo and food");
+        assert_eq!(similarity(&"bar".to_string(), &"barred".to_string()), 0.375, "checking bar and barred");
     }
 }
