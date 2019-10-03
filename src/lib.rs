@@ -52,4 +52,17 @@ mod tests {
             assert_eq!(similarity(&a, &a), 1.0, "checking similarity of '{}' to itself", a);
         }
     }
+
+    #[test]
+    fn zero_similarity_for_nothing_in_common() {
+        let va = vec!["abc", "abcd"];
+        for a in va {
+            let a = a.to_string();
+            let vb = vec!["def", "efgh"];
+            for b in vb {
+                let b = b.to_string();
+                assert_eq!(similarity(&a, &b), 0.0, "checking that '{}' and '{}' have similarity of zero", a, b);
+            }
+        }
+    }
 }
