@@ -7,16 +7,21 @@ https://www.postgresql.org/docs/9.1/pgtrgm.html.
 use std::collections::HashSet;
 use std::hash::Hash;
 
+/// Distance between two strings as 1 - their similarity. This is not a metric because different
+/// strings can have a distance of zero since differences in whitespace and punctuation are
+/// ignored. For example `distance("a".to_string(), "a!".to_string())` is 0.0.
 pub fn distance(a: &String, b: &String) -> f32 {
     1.0 - similarity(a, b)
 }
 
+/// Similarity of two strings as the Jaccard similarity of their trigram sets.
 pub fn similarity(a: &String, b: &String) -> f32 {
     let ta = trigrams(a);
     let tb = trigrams(b);
     return jaccard(ta, tb);
 }
 
+/// Set of character trigrams of the words in the input string.
 pub fn trigrams(s: &String) -> HashSet<String> {
     let mut ts: HashSet<String> = HashSet::new();
     for w in words(s) {
@@ -27,6 +32,8 @@ pub fn trigrams(s: &String) -> HashSet<String> {
     ts
 }
 
+/// Jaccard similarity between two sets.
+/// https://en.wikipedia.org/wiki/Jaccard_index
 pub fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
     let i = s1.intersection(&s2).count() as f32;
     let u = s1.union(&s2).count() as f32;
