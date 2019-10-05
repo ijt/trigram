@@ -22,7 +22,6 @@ pub fn similarity(a: &str, b: &str) -> f32 {
     let b = RX.replace_all(b, "  ");
     let ta = trigrams(&a[0..a.len()]);
     let tb = trigrams(&b[0..b.len()]);
-    println!("trigrams of a: {:?}, trigrams of b: {:?}", sorted(&ta), sorted(&tb));
     return jaccard(ta, tb);
 }
 
