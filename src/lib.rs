@@ -25,6 +25,8 @@ pub fn similarity(a: &str, b: &str) -> f32 {
     return jaccard(ta, tb);
 }
 
+// Sorts the contents of a hash set for easy comparison with the output of the Postgres `show_trgm`
+// function.
 fn sorted<'a>(hs: &HashSet<&'a str>) -> Vec<&'a str> {
     let mut v: Vec<&str> = Vec::new();
     for s in hs {
@@ -49,6 +51,8 @@ fn trigrams(s: &str) -> HashSet<&str> {
     }
     for i in 0..s.len()-3 {
         let t = &s[i..i+3];
+        // The check here matches an idiosyncrasy of the Postgres trigram extension:
+        // it doesn't count trigrams that end with two spaces.
         if &t[1..3] != "  " {
             ts.insert(t);
         }
