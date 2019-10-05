@@ -116,8 +116,8 @@ mod tests {
     #[bench]
     fn bench_string_equality(b: &mut Bencher) {
         b.iter(|| {
-            let s1 = "This is a longer string. It contains complete sentences.";
-            let s2 = "This is a longish string. It contains complete sentences.";
+            let s1 = "This is a longer string. It contains complete sentences.".to_string();
+            let s2 = "This is a longish string. It contains complete sentences.".to_string();
             let _ = s1 == s2;
         })
     }
