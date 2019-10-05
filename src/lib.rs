@@ -6,13 +6,11 @@ https://www.postgresql.org/docs/9.1/pgtrgm.html.
 
 #![feature(test)]
 
-extern crate test;
-#[macro_use] extern crate lazy_static;
-
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::FromIterator;
 use regex::Regex;
+use lazy_static::lazy_static;
 
 /// Similarity of two strings as the Jaccard similarity of their trigram sets.
 pub fn similarity(a: &str, b: &str) -> f32 {
@@ -43,6 +41,8 @@ fn trigrams(s: &str) -> HashSet<&str> {
 
 #[cfg(test)]
 mod tests {
+    extern crate test;
+
     use super::*;
     use test::Bencher;
 
