@@ -9,7 +9,7 @@ license = "Apache-2.0"
 name = "trigram"
 readme = "README.md"
 repository = "https://github.com/ijt/trigram"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies]
 regex = "1.3.1"
