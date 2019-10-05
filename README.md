@@ -12,7 +12,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-trigram = "0.2.0"
+trigram = "0.2.1"
 ```
 
 and call it like this:
