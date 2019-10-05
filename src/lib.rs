@@ -11,6 +11,7 @@ extern crate test;
 
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::iter::FromIterator;
 use regex::Regex;
 
 /// Similarity of two strings as the Jaccard similarity of their trigram sets.
@@ -20,44 +21,24 @@ pub fn similarity(a: &str, b: &str) -> f32 {
     }
     let a = RX.replace_all(a, "  ");
     let b = RX.replace_all(b, "  ");
-    let ta = trigrams(&a[0..a.len()]);
-    let tb = trigrams(&b[0..b.len()]);
+    let ta = trigrams(&a);
+    let tb = trigrams(&b);
     return jaccard(ta, tb);
-}
-
-// Sorts the contents of a hash set for easy comparison with the output of the Postgres `show_trgm`
-// function.
-fn sorted<'a>(hs: &HashSet<&'a str>) -> Vec<&'a str> {
-    let mut v: Vec<&str> = Vec::new();
-    for s in hs {
-        v.push(s);
-    }
-    v.sort();
-    v
 }
 
 /// Jaccard similarity between two sets.
 /// https://en.wikipedia.org/wiki/Jaccard_index
-pub fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
+fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
     let i = s1.intersection(&s2).count() as f32;
     let u = s1.union(&s2).count() as f32;
     if u == 0.0 { 1.0 } else { i / u }
 }
 
+/// Returns the set of trigrams found in s, except ones ending in two spaces.
 fn trigrams(s: &str) -> HashSet<&str> {
-    let mut ts = HashSet::new();
-    if s.len() < 3 {
-        return ts
-    }
-    for i in 0..s.len()-3 {
-        let t = &s[i..i+3];
-        // The check here matches an idiosyncrasy of the Postgres trigram extension:
-        // it doesn't count trigrams that end with two spaces.
-        if &t[1..3] != "  " {
-            ts.insert(t);
-        }
-    }
-    ts
+    // The filter is to match an idiosyncrasy of the Postgres trigram extension:
+    // it doesn't count trigrams that end with two spaces.
+    HashSet::from_iter((0..s.len()-2).map(|i| &s[i..i+3]).filter(|t| &t[1..3] != "  "))
 }
 
 #[cfg(test)]
