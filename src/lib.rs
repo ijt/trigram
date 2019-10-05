@@ -72,7 +72,6 @@ mod tests {
     fn same_string() {
         let strs = vec!["", "a", "ab", "abc", "abcd"];
         for a in strs {
-            let a = a.to_string();
             assert_eq!(similarity(&a, &a), 1.0, "checking similarity of '{}' to itself", a);
         }
     }
@@ -81,10 +80,8 @@ mod tests {
     fn zero_similarity_for_nothing_in_common() {
         let va = vec!["abc", "abcd"];
         for a in va {
-            let a = a.to_string();
             let vb = vec!["def", "efgh"];
             for b in vb {
-                let b = b.to_string();
                 assert_eq!(similarity(&a, &b), 0.0, "checking that '{}' and '{}' have similarity of zero", a, b);
                 assert_eq!(similarity(&b, &a), 0.0, "checking that '{}' and '{}' have similarity of zero", b, a);
             }
@@ -94,13 +91,13 @@ mod tests {
     #[test]
     fn fuzzy_matches() {
         // Check for agreement with answers given by the postgres pg_trgm similarity function.
-        assert_eq!(similarity(&"a".to_string(), &"ab".to_string()), 0.25, "checking a and ab");
-        assert_eq!(similarity(&"foo".to_string(), &"food".to_string()), 0.5, "checking foo and food");
-        assert_eq!(similarity(&"bar".to_string(), &"barred".to_string()), 0.375, "checking bar and barred");
-        assert_eq!(similarity(&"ing bear".to_string(), &"ing boar".to_string()), 0.5, "checking ing bear and ing boar");
-        assert_eq!(similarity(&"dancing bear".to_string(), &"dancing boar".to_string()), 0.625, "checking dancing bear and dancing boar");
-        assert_eq!(similarity(&"sir sly".to_string(), &"srsly".to_string()), 0.3, "checking sir sly and srsly");
-        assert_eq!(similarity(&"same, but different?".to_string(), &"same but different".to_string()), 1.0, "checking same but different");
+        assert_eq!(similarity(&"a", &"ab"), 0.25, "checking a and ab");
+        assert_eq!(similarity(&"foo", &"food"), 0.5, "checking foo and food");
+        assert_eq!(similarity(&"bar", &"barred"), 0.375, "checking bar and barred");
+        assert_eq!(similarity(&"ing bear", &"ing boar"), 0.5, "checking ing bear and ing boar");
+        assert_eq!(similarity(&"dancing bear", &"dancing boar"), 0.625, "checking dancing bear and dancing boar");
+        assert_eq!(similarity(&"sir sly", &"srsly"), 0.3, "checking sir sly and srsly");
+        assert_eq!(similarity(&"same, but different?", &"same but different"), 1.0, "checking same but different");
     }
 
     #[bench]
@@ -108,7 +105,7 @@ mod tests {
         b.iter(|| {
             let s1 = "This is a longer string. It contains complete sentences.";
             let s2 = "This is a longish string. It contains complete sentences.";
-            let _ = similarity(&s1.to_string(), &s2.to_string());
+            let _ = similarity(&s1, &s2);
         })
     }
 
@@ -116,8 +113,8 @@ mod tests {
     #[bench]
     fn bench_string_equality(b: &mut Bencher) {
         b.iter(|| {
-            let s1 = "This is a longer string. It contains complete sentences.".to_string();
-            let s2 = "This is a longish string. It contains complete sentences.".to_string();
+            let s1 = "This is a longer string. It contains complete sentences.";
+            let s2 = "This is a longish string. It contains complete sentences.";
             let _ = s1 == s2;
         })
     }
