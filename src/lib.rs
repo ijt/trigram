@@ -76,4 +76,10 @@ mod tests {
         assert_eq!(similarity(&"sir sly", &"srsly"), 0.3, "checking sir sly and srsly");
         assert_eq!(similarity(&"same, but different?", &"same but different"), 1.0, "checking same but different");
     }
+
+    #[test]
+    fn special_characters() {
+        // check if the library can handle some special characters
+        similarity("ö`üǜ…", "asdf");
+    }
 }
