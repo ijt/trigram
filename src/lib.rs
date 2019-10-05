@@ -15,6 +15,7 @@ use std::iter::FromIterator;
 use regex::Regex;
 
 /// Similarity of two strings as the Jaccard similarity of their trigram sets.
+/// The returned value can be anything between 0.0 and 1.0, inclusive.
 pub fn similarity(a: &str, b: &str) -> f32 {
     lazy_static! {
         static ref RX: Regex = Regex::new(r"^|$|\W+").unwrap();
