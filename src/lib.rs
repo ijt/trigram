@@ -6,9 +6,7 @@ https://www.postgresql.org/docs/9.1/pgtrgm.html.
 
 #![feature(test)]
 
-extern crate test;
-#[macro_use] extern crate lazy_static;
-
+use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::FromIterator;
@@ -45,7 +43,6 @@ fn trigrams(s: &str) -> HashSet<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::Bencher;
 
     #[test]
     fn empty() { assert_eq!(similarity(&"", &""), 1.0, "checking similarity of '' to ''"); }
@@ -80,24 +77,5 @@ mod tests {
         assert_eq!(similarity(&"dancing bear", &"dancing boar"), 0.625, "checking dancing bear and dancing boar");
         assert_eq!(similarity(&"sir sly", &"srsly"), 0.3, "checking sir sly and srsly");
         assert_eq!(similarity(&"same, but different?", &"same but different"), 1.0, "checking same but different");
-    }
-
-    #[bench]
-    fn bench_similarity(b: &mut Bencher) {
-        b.iter(|| {
-            let s1 = "This is a longer string. It contains complete sentences.";
-            let s2 = "This is a longish string. It contains complete sentences.";
-            let _ = similarity(&s1, &s2);
-        })
-    }
-
-    /// This is meant to provide a point of reference for the similarity benchmark.
-    #[bench]
-    fn bench_string_equality(b: &mut Bencher) {
-        b.iter(|| {
-            let s1 = "This is a longer string. It contains complete sentences.";
-            let s2 = "This is a longish string. It contains complete sentences.";
-            let _ = s1 == s2;
-        })
     }
 }
