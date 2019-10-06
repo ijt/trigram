@@ -21,9 +21,9 @@ pub fn find_words_iter<'n, 'h>(
     }
     let words = WORD_RX.find_iter(haystack);
     Matches {
-        needle: needle,
+        needle,
         haystack_words: words,
-        threshold: threshold,
+        threshold
     }
 }
 
@@ -38,22 +38,18 @@ impl<'n, 'h> Iterator for Matches<'n, 'h> {
     type Item = Match<'h>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if let Some(m) = self.haystack_words.next() {
-                let w = m.as_str();
-                if similarity(self.needle, w) > self.threshold {
-                    let m2 = Match {
-                        text: w,
-                        start: m.start(),
-                        end: m.end(),
-                    };
-                    return Some(m2);
-                }
-            } else {
-                break;
+        while let Some(m) = self.haystack_words.next() {
+            let w = m.as_str();
+            if similarity(self.needle, w) > self.threshold {
+                let m2 = Match {
+                    text: w,
+                    start: m.start(),
+                    end: m.end(),
+                };
+                return Some(m2);
             }
         }
-        return None;
+        None
     }
 }
 
@@ -88,12 +84,12 @@ pub fn similarity(a: &str, b: &str) -> f32 {
     let b = RX.replace_all(b, "  ").to_lowercase();
     let ta = trigrams(&a);
     let tb = trigrams(&b);
-    return jaccard(ta, tb);
+    jaccard(&ta, &tb)
 }
 
 /// Jaccard similarity between two sets.
 /// https://en.wikipedia.org/wiki/Jaccard_index
-fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32
+fn jaccard<T>(s1: &HashSet<T>, s2: &HashSet<T>) -> f32
 where
     T: Hash + Eq,
 {

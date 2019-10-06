@@ -1,3 +1,6 @@
+## 0.4.2 (in progress)
+* Fix clippy warnings
+
 ## 0.4.2
 * Run `cargo fmt`
 
