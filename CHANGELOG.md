@@ -1,4 +1,4 @@
-## 0.4.4 (in progress)
+## 0.4.4
 * Fix dependencies to work with stable Rust
 * Improve doc strings for public functions
 
