@@ -9,6 +9,59 @@ use std::iter::FromIterator;
 use regex::Regex;
 use lazy_static::lazy_static;
 
+// Finds fuzzy matches of needle within haystack. A reasonable choice for
+// threshold might be 0.3.
+pub fn find_words_iter<'n, 'h>(needle: &'n str, haystack: &'h str, threshold: f32) -> Matches<'n, 'h> {
+    lazy_static! {
+        static ref WORD_RX: Regex = Regex::new(r"\w+").unwrap();
+    }
+    let words = WORD_RX.find_iter(haystack);
+    Matches {
+        needle: needle,
+        haystack_words: words,
+        threshold: threshold
+    }
+}
+
+/// Iterator over fuzzy word matches.
+pub struct Matches<'n, 'h> {
+    needle: &'n str,
+    haystack_words: regex::Matches<'static, 'h>,
+    threshold: f32
+}
+
+impl<'n, 'h> Iterator for Matches<'n, 'h> {
+    type Item = Match<'h>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(m) = self.haystack_words.next() {
+                let w = m.as_str();
+                if similarity(self.needle, w) > self.threshold {
+                    let m2 = Match {
+                        text: w,
+                        start: m.start(),
+                        end: m.end()
+                    };
+                    return Some(m2)
+                }
+            } else {
+                break
+            }
+        }
+        return None
+    }
+}
+
+/// This is the same as regex::Match.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Match<'t> {
+    text: &'t str,
+    start: usize,
+    end: usize,
+}
+
+
 /// Similarity of two strings as the Jaccard similarity of their trigram sets. This function
 /// returns a value between 0.0 and 1.0, with 1.0 indicating that the strings are completely
 /// similar.
@@ -35,14 +88,22 @@ fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
 fn trigrams(s: &str) -> HashSet<&str> {
     // The filter is to match an idiosyncrasy of the Postgres trigram extension:
     // it doesn't count trigrams that end with two spaces.
+    let idxs = rune_indexes(s);
+    HashSet::from_iter((0..idxs.len()-3).map(|i| &s[idxs[i]..idxs[i+3]]).filter(|t| !t.ends_with("  ")))
+}
+
+/// Returns a vec of all the indexes of characters within the string, plus a
+/// sentinel value at the end.
+fn rune_indexes(s: &str) -> Vec<usize> {
     let mut idxs: Vec<usize> = s.char_indices().map(|(i, _)| i).collect();
     idxs.push(s.len());
-    HashSet::from_iter((0..idxs.len()-3).map(|i| &s[idxs[i]..idxs[i+3]]).filter(|t| !t.ends_with("  ")))
+    idxs
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use table_test::table_test;
 
     #[test]
     fn empty() { assert_eq!(similarity(&"", &""), 1.0, "checking similarity of '' to ''"); }
@@ -84,5 +145,31 @@ mod tests {
         assert_eq!(similarity(&"dancing bear", &"dancing boar"), 0.625, "checking dancing bear and dancing boar");
         assert_eq!(similarity(&"sir sly", &"srsly"), 0.3, "checking sir sly and srsly");
         assert_eq!(similarity(&"same, but different?", &"same but different"), 1.0, "checking same but different");
+    }
+
+    #[test]
+    fn finding() {
+        let table = vec![
+            (("", ""), vec![]),
+            (("a", ""), vec![]),
+            (("a", "a"), vec![(0, 1)]),
+            (("a", "ab"), vec![]),
+            (("a", "ba"), vec![]),
+            (("ab", "abc"), vec![(0, 3)]),
+            (("a", "ababa"), vec![]),
+            (("a", "a b a b a"), vec![(0, 1), (4, 5), (8, 9)]),
+            (("riddums", "riddims"), vec![(0, "riddums".len())]),
+            (("riddums", "funky riddims"), vec![("funky ".len(), "funky riddums".len())]),
+        ];
+
+        for (validator, (needle, haystack), expected) in table_test!(table) {
+            let threshold = 0.3;
+            let actual: Vec<(usize, usize)> = find_words_iter(needle, haystack, threshold).map(|m| (m.start, m.end)).collect();
+            validator
+                .given(&format!("needle = '{}', haystack = '{}'", needle, haystack))
+                .when("find_vec")
+                .then(&format!("it should return {:?}", expected))
+                .assert_eq(expected, actual);
+        }
     }
 }
