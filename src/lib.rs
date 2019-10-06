@@ -1,19 +1,17 @@
 /*! 
 The trigram library computes the similarity of strings, inspired by the similarity function in the
-Postgresql pg_trgm extension:
-https://www.postgresql.org/docs/9.1/pgtrgm.html.
+[Postgresql pg_trgm extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
 */
 
-#![feature(test)]
-
-use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::FromIterator;
 use regex::Regex;
+use lazy_static::lazy_static;
 
-/// Similarity of two strings as the Jaccard similarity of their trigram sets.
-/// The returned value can be anything between 0.0 and 1.0, inclusive.
+/// Similarity of two strings as the Jaccard similarity of their trigram sets. This function
+/// returns a value between 0.0 and 1.0, with 1.0 indicating that the strings are completely
+/// similar.
 pub fn similarity(a: &str, b: &str) -> f32 {
     lazy_static! {
         static ref RX: Regex = Regex::new(r"^|$|\W+").unwrap();
@@ -70,6 +68,8 @@ mod tests {
     #[test]
     fn non_ascii_unicode() {
         assert_eq!(similarity(&"🐕", &"🐕"), 1.0, "dog matches dog");
+        assert_eq!(similarity(&"ö`üǜ", &"asd"), 0.0, "no match between ö`üǜ and asd");
+        assert_eq!(similarity(&"ö`üǜ", &"ouu"), 0.0, "no match between ö`üǜ… and ouu");
     }
 
     #[test]
