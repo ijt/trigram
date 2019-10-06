@@ -1,5 +1,9 @@
 # trigram
 
+[![Build Status](https://travis-ci.org/ijt/trigram.svg?branch=master)](https://travis-ci.org/ijt/trigram)
+[![License](https://img.shields.io/badge/license-Apache-blue.svg)](https://raw.githubusercontent.com/ijt/trigram/master/LICENSE)
+[![Documentation](https://docs.rs/trigram/badge.svg)](https://docs.rs/trigram)
+
 This Rust crate contains a function to compute trigram-based similarity of strings.
 
 A trigram is a 3-character long string, and it turns out that the set of all
