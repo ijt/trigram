@@ -1,3 +1,6 @@
+## 0.4.2 (in progress)
+* Run `cargo fmt`
+
 ## 0.4.1
 * Fix a missing doc string
 

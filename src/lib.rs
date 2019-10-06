@@ -1,17 +1,21 @@
-/*! 
+/*!
 The trigram library computes the similarity of strings, inspired by the similarity function in the
 [Postgresql pg_trgm extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
 */
 
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::FromIterator;
-use regex::Regex;
-use lazy_static::lazy_static;
 
 /// Finds fuzzy matches of needle within haystack. A reasonable choice for
 /// threshold might be 0.3.
-pub fn find_words_iter<'n, 'h>(needle: &'n str, haystack: &'h str, threshold: f32) -> Matches<'n, 'h> {
+pub fn find_words_iter<'n, 'h>(
+    needle: &'n str,
+    haystack: &'h str,
+    threshold: f32,
+) -> Matches<'n, 'h> {
     lazy_static! {
         static ref WORD_RX: Regex = Regex::new(r"\w+").unwrap();
     }
@@ -19,7 +23,7 @@ pub fn find_words_iter<'n, 'h>(needle: &'n str, haystack: &'h str, threshold: f3
     Matches {
         needle: needle,
         haystack_words: words,
-        threshold: threshold
+        threshold: threshold,
     }
 }
 
@@ -27,7 +31,7 @@ pub fn find_words_iter<'n, 'h>(needle: &'n str, haystack: &'h str, threshold: f3
 pub struct Matches<'n, 'h> {
     needle: &'n str,
     haystack_words: regex::Matches<'static, 'h>,
-    threshold: f32
+    threshold: f32,
 }
 
 impl<'n, 'h> Iterator for Matches<'n, 'h> {
@@ -41,15 +45,15 @@ impl<'n, 'h> Iterator for Matches<'n, 'h> {
                     let m2 = Match {
                         text: w,
                         start: m.start(),
-                        end: m.end()
+                        end: m.end(),
                     };
-                    return Some(m2)
+                    return Some(m2);
                 }
             } else {
-                break
+                break;
             }
         }
-        return None
+        return None;
     }
 }
 
@@ -62,9 +66,15 @@ pub struct Match<'t> {
 }
 
 impl<'t> Match<'t> {
-    pub fn start(self) -> usize { self.start }
-    pub fn end(self) -> usize { self.end }
-    pub fn as_str(self) -> &'t str { self.text }
+    pub fn start(self) -> usize {
+        self.start
+    }
+    pub fn end(self) -> usize {
+        self.end
+    }
+    pub fn as_str(self) -> &'t str {
+        self.text
+    }
 }
 
 /// Similarity of two strings as the Jaccard similarity of their trigram sets. This function
@@ -83,10 +93,17 @@ pub fn similarity(a: &str, b: &str) -> f32 {
 
 /// Jaccard similarity between two sets.
 /// https://en.wikipedia.org/wiki/Jaccard_index
-fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
+fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32
+where
+    T: Hash + Eq,
+{
     let i = s1.intersection(&s2).count() as f32;
     let u = s1.union(&s2).count() as f32;
-    if u == 0.0 { 1.0 } else { i / u }
+    if u == 0.0 {
+        1.0
+    } else {
+        i / u
+    }
 }
 
 /// Returns the set of trigrams found in s, except ones ending in two spaces.
@@ -94,7 +111,11 @@ fn trigrams(s: &str) -> HashSet<&str> {
     // The filter is to match an idiosyncrasy of the Postgres trigram extension:
     // it doesn't count trigrams that end with two spaces.
     let idxs = rune_indexes(&s);
-    HashSet::from_iter((0..idxs.len()-3).map(|i| &s[idxs[i]..idxs[i+3]]).filter(|t| !t.ends_with("  ")))
+    HashSet::from_iter(
+        (0..idxs.len() - 3)
+            .map(|i| &s[idxs[i]..idxs[i + 3]])
+            .filter(|t| !t.ends_with("  ")),
+    )
 }
 
 /// Returns a vec of all the indexes of characters within the string, plus a
@@ -111,13 +132,20 @@ mod tests {
     use table_test::table_test;
 
     #[test]
-    fn empty() { assert_eq!(similarity(&"", &""), 1.0, "checking similarity of '' to ''"); }
+    fn empty() {
+        assert_eq!(similarity(&"", &""), 1.0, "checking similarity of '' to ''");
+    }
 
     #[test]
     fn same_string() {
         let strs = vec!["", "a", "ab", "abc", "abcd"];
         for a in strs {
-            assert_eq!(similarity(&a, &a), 1.0, "checking similarity of '{}' to itself", a);
+            assert_eq!(
+                similarity(&a, &a),
+                1.0,
+                "checking similarity of '{}' to itself",
+                a
+            );
         }
     }
 
@@ -127,8 +155,20 @@ mod tests {
         for a in va {
             let vb = vec!["def", "efgh"];
             for b in vb {
-                assert_eq!(similarity(&a, &b), 0.0, "checking that '{}' and '{}' have similarity of zero", a, b);
-                assert_eq!(similarity(&b, &a), 0.0, "checking that '{}' and '{}' have similarity of zero", b, a);
+                assert_eq!(
+                    similarity(&a, &b),
+                    0.0,
+                    "checking that '{}' and '{}' have similarity of zero",
+                    a,
+                    b
+                );
+                assert_eq!(
+                    similarity(&b, &a),
+                    0.0,
+                    "checking that '{}' and '{}' have similarity of zero",
+                    b,
+                    a
+                );
             }
         }
     }
@@ -136,8 +176,16 @@ mod tests {
     #[test]
     fn non_ascii_unicode() {
         assert_eq!(similarity(&"🐕", &"🐕"), 1.0, "dog matches dog");
-        assert_eq!(similarity(&"ö`üǜ", &"asd"), 0.0, "no match between ö`üǜ and asd");
-        assert_eq!(similarity(&"ö`üǜ", &"ouu"), 0.0, "no match between ö`üǜ… and ouu");
+        assert_eq!(
+            similarity(&"ö`üǜ", &"asd"),
+            0.0,
+            "no match between ö`üǜ and asd"
+        );
+        assert_eq!(
+            similarity(&"ö`üǜ", &"ouu"),
+            0.0,
+            "no match between ö`üǜ… and ouu"
+        );
     }
 
     #[test]
@@ -151,11 +199,31 @@ mod tests {
         // Check for agreement with answers given by the postgres pg_trgm similarity function.
         assert_eq!(similarity(&"a", &"ab"), 0.25, "checking a and ab");
         assert_eq!(similarity(&"foo", &"food"), 0.5, "checking foo and food");
-        assert_eq!(similarity(&"bar", &"barred"), 0.375, "checking bar and barred");
-        assert_eq!(similarity(&"ing bear", &"ing boar"), 0.5, "checking ing bear and ing boar");
-        assert_eq!(similarity(&"dancing bear", &"dancing boar"), 0.625, "checking dancing bear and dancing boar");
-        assert_eq!(similarity(&"sir sly", &"srsly"), 0.3, "checking sir sly and srsly");
-        assert_eq!(similarity(&"same, but different?", &"same but different"), 1.0, "checking same but different");
+        assert_eq!(
+            similarity(&"bar", &"barred"),
+            0.375,
+            "checking bar and barred"
+        );
+        assert_eq!(
+            similarity(&"ing bear", &"ing boar"),
+            0.5,
+            "checking ing bear and ing boar"
+        );
+        assert_eq!(
+            similarity(&"dancing bear", &"dancing boar"),
+            0.625,
+            "checking dancing bear and dancing boar"
+        );
+        assert_eq!(
+            similarity(&"sir sly", &"srsly"),
+            0.3,
+            "checking sir sly and srsly"
+        );
+        assert_eq!(
+            similarity(&"same, but different?", &"same but different"),
+            1.0,
+            "checking same but different"
+        );
     }
 
     #[test]
@@ -170,12 +238,17 @@ mod tests {
             (("a", "ababa"), vec![]),
             (("a", "a b a b a"), vec![(0, 1), (4, 5), (8, 9)]),
             (("riddums", "riddims"), vec![(0, "riddums".len())]),
-            (("riddums", "funky riddims"), vec![("funky ".len(), "funky riddums".len())]),
+            (
+                ("riddums", "funky riddims"),
+                vec![("funky ".len(), "funky riddums".len())],
+            ),
         ];
 
         for (validator, (needle, haystack), expected) in table_test!(table) {
             let threshold = 0.3;
-            let actual: Vec<(usize, usize)> = find_words_iter(needle, haystack, threshold).map(|m| (m.start, m.end)).collect();
+            let actual: Vec<(usize, usize)> = find_words_iter(needle, haystack, threshold)
+                .map(|m| (m.start, m.end))
+                .collect();
             validator
                 .given(&format!("needle = '{}', haystack = '{}'", needle, haystack))
                 .when("find_vec")
