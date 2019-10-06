@@ -141,6 +141,11 @@ mod tests {
     }
 
     #[test]
+    fn case_ignored() {
+        assert_eq!(similarity("A", "a"), 1.0, "A is a");
+    }
+
+    #[test]
     fn fuzzy_matches() {
         // Check for agreement with answers given by the postgres pg_trgm similarity function.
         assert_eq!(similarity(&"a", &"ab"), 0.25, "checking a and ab");
