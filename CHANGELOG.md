@@ -1,4 +1,5 @@
-## 0.3.1 (in progress)
+## 0.4.0 (in progress)
+* Ignore case
 * Add examples
 * Add public accessors to make `Match` more like `regex::Match`
 

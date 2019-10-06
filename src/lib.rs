@@ -74,8 +74,8 @@ pub fn similarity(a: &str, b: &str) -> f32 {
     lazy_static! {
         static ref RX: Regex = Regex::new(r"^|$|\W+").unwrap();
     }
-    let a = RX.replace_all(a, "  ");
-    let b = RX.replace_all(b, "  ");
+    let a = RX.replace_all(a, "  ").to_lowercase();
+    let b = RX.replace_all(b, "  ").to_lowercase();
     let ta = trigrams(&a);
     let tb = trigrams(&b);
     return jaccard(ta, tb);
@@ -93,7 +93,7 @@ fn jaccard<T>(s1: HashSet<T>, s2: HashSet<T>) -> f32 where T: Hash+Eq {
 fn trigrams(s: &str) -> HashSet<&str> {
     // The filter is to match an idiosyncrasy of the Postgres trigram extension:
     // it doesn't count trigrams that end with two spaces.
-    let idxs = rune_indexes(s);
+    let idxs = rune_indexes(&s);
     HashSet::from_iter((0..idxs.len()-3).map(|i| &s[idxs[i]..idxs[i+3]]).filter(|t| !t.ends_with("  ")))
 }
 
@@ -143,6 +143,7 @@ mod tests {
     #[test]
     fn case_ignored() {
         assert_eq!(similarity("A", "a"), 1.0, "A is a");
+        assert_eq!(similarity("a", "A"), 1.0, "a is A");
     }
 
     #[test]
