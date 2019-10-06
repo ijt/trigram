@@ -1,4 +1,4 @@
-## 0.4.1 (in progress)
+## 0.4.1
 * Fix a missing doc string
 
 ## 0.4.0
