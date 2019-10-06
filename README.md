@@ -4,11 +4,14 @@
 [![License](https://img.shields.io/badge/license-Apache-blue.svg)](https://raw.githubusercontent.com/ijt/trigram/master/LICENSE)
 [![Documentation](https://docs.rs/trigram/badge.svg)](https://docs.rs/trigram)
 
-This Rust crate contains a function to compute trigram-based similarity of strings.
+This Rust crate contains functions for fuzzy string matching.
 
-A trigram is a 3-character long string, and it turns out that the set of all
-the trigrams in a given string is a good way to represent it when computing its
-similarity to other strings.
+It exports two functions. The `similarity` function returns the similarity of
+two strings, and the `find_words_iter` function returns an iterator of matches
+for a smaller string (`needle`) in a larger string (`haystack`).
+
+The similarity of strings is computed based on their trigrams, meaning their
+3-character substrings: https://en.wikipedia.org/wiki/Trigram.
 
 ## Usage
 
