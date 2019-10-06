@@ -61,6 +61,11 @@ pub struct Match<'t> {
     end: usize,
 }
 
+impl<'t> Match<'t> {
+    pub fn start(self) -> usize { self.start }
+    pub fn end(self) -> usize { self.end }
+    pub fn as_str(self) -> &'t str { self.text }
+}
 
 /// Similarity of two strings as the Jaccard similarity of their trigram sets. This function
 /// returns a value between 0.0 and 1.0, with 1.0 indicating that the strings are completely
