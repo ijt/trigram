@@ -23,7 +23,7 @@ pub fn find_words_iter<'n, 'h>(
     Matches {
         needle,
         haystack_words: words,
-        threshold
+        threshold,
     }
 }
 
