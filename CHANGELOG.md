@@ -1,4 +1,4 @@
-## 0.4.0 (in progress)
+## 0.4.0
 * Ignore case
 * Add examples: `find_words_iter.rs` and `similarity.rs`
 * Add public accessors to make `Match` more like `regex::Match`
