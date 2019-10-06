@@ -1,4 +1,4 @@
-## 0.4.2 (in progress)
+## 0.4.2
 * Run `cargo fmt`
 
 ## 0.4.1
