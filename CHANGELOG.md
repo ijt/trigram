@@ -1,4 +1,4 @@
-## 0.4.2 (in progress)
+## 0.4.3
 * Fix clippy warnings
 
 ## 0.4.2
