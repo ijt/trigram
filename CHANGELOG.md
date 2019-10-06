@@ -1,6 +1,6 @@
 ## 0.4.0 (in progress)
 * Ignore case
-* Add examples
+* Add examples: `find_words_iter.rs` and `similarity.rs`
 * Add public accessors to make `Match` more like `regex::Match`
 
 ## 0.3.0

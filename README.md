@@ -13,6 +13,26 @@ for a smaller string (`needle`) in a larger string (`haystack`).
 The similarity of strings is computed based on their trigrams, meaning their
 3-character substrings: https://en.wikipedia.org/wiki/Trigram.
 
+## Trying it out
+
+Here is how to run the examples:
+
+```
+$ cargo run --example similarity color colour
+...
+0.44444445
+
+$ cargo run --example find_words_iter
+bufalo
+buffalow
+Bungalo
+biffalo
+buffaloo
+huffalo
+snuffalo
+fluffalo
+```
+
 ## Usage
 
 Add this to your `Cargo.toml`:
