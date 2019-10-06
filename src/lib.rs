@@ -9,8 +9,8 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::FromIterator;
 
-/// Finds fuzzy matches of needle within haystack. A reasonable choice for
-/// threshold might be 0.3.
+/// Iterates over fuzzy matches of one string against the words in another, such
+/// that the similarity is over some threshold, for example 0.3.
 pub fn find_words_iter<'n, 'h>(
     needle: &'n str,
     haystack: &'h str,
@@ -73,9 +73,11 @@ impl<'t> Match<'t> {
     }
 }
 
-/// Similarity of two strings as the Jaccard similarity of their trigram sets. This function
-/// returns a value between 0.0 and 1.0, with 1.0 indicating that the strings are completely
-/// similar.
+/// Returns the similarity of two strings as the Jaccard similarity of their trigram sets. The
+/// returned value is between 0.0 and 1.0, with 1.0 indicating maximum similarity.  The input
+/// strings are normalized before comparison, so it is possible to get a score of 1.0 between
+/// different strings. For example `"figaro"` and `"Figaro?"` have a similarity of
+/// 1.0.
 pub fn similarity(a: &str, b: &str) -> f32 {
     lazy_static! {
         static ref RX: Regex = Regex::new(r"^|$|\W+").unwrap();

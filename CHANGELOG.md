@@ -1,3 +1,7 @@
+## 0.4.4 (in progress)
+* Fix dependencies to work with stable Rust
+* Improve doc strings for public functions
+
 ## 0.4.3
 * Fix clippy warnings
 
