@@ -1,3 +1,6 @@
+## 0.4.1 (in progress)
+* Fix a missing doc string
+
 ## 0.4.0
 * Ignore case
 * Add examples: `find_words_iter.rs` and `similarity.rs`

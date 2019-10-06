@@ -9,8 +9,8 @@ use std::iter::FromIterator;
 use regex::Regex;
 use lazy_static::lazy_static;
 
-// Finds fuzzy matches of needle within haystack. A reasonable choice for
-// threshold might be 0.3.
+/// Finds fuzzy matches of needle within haystack. A reasonable choice for
+/// threshold might be 0.3.
 pub fn find_words_iter<'n, 'h>(needle: &'n str, haystack: &'h str, threshold: f32) -> Matches<'n, 'h> {
     lazy_static! {
         static ref WORD_RX: Regex = Regex::new(r"\w+").unwrap();
