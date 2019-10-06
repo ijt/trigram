@@ -1,4 +1,4 @@
-## 0.2.4 (in progress)
+## 0.2.4
 * Got the speed back to about where it was before adding Unicode support
 
 ## 0.2.3
