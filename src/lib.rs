@@ -37,12 +37,7 @@ fn trigrams(s: &str) -> HashSet<&str> {
     // it doesn't count trigrams that end with two spaces.
     let mut idxs: Vec<usize> = s.char_indices().map(|(i, _)| i).collect();
     idxs.push(s.len());
-    HashSet::from_iter((0..idxs.len()-3).map(|i| &s[idxs[i]..idxs[i+3]]).filter(|t| last_two(t) != "  "))
-}
-
-fn last_two(s: &str) -> &str {
-    let idxs: Vec<usize> = s.char_indices().map(|(i, _)| i).collect();
-    return &s[idxs[idxs.len()-2]..s.len()]
+    HashSet::from_iter((0..idxs.len()-3).map(|i| &s[idxs[i]..idxs[i+3]]).filter(|t| !t.ends_with("  ")))
 }
 
 #[cfg(test)]
