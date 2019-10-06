@@ -68,6 +68,11 @@ mod tests {
     }
 
     #[test]
+    fn non_ascii_unicode() {
+        assert_eq!(similarity(&"🐕", &"🐕"), 1.0, "dog matches dog");
+    }
+
+    #[test]
     fn fuzzy_matches() {
         // Check for agreement with answers given by the postgres pg_trgm similarity function.
         assert_eq!(similarity(&"a", &"ab"), 0.25, "checking a and ab");
