@@ -1,4 +1,4 @@
-## 0.3.0 (in progress)
+## 0.3.0
 * Add `find_words_iter` function to find substring fuzzy matches of words
 
 ## 0.2.4
