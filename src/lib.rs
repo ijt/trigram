@@ -3,7 +3,7 @@ The trigram library computes the similarity of strings, inspired by the similari
 [Postgresql pg_trgm extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
 */
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -16,9 +16,9 @@ pub fn find_words_iter<'n, 'h>(
     haystack: &'h str,
     threshold: f32,
 ) -> Matches<'n, 'h> {
-    lazy_static! {
-        static ref WORD_RX: Regex = Regex::new(r"\w+").unwrap();
-    }
+    static WORD_RX: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"\w+").unwrap()
+    });
     let words = WORD_RX.find_iter(haystack);
     Matches {
         needle,
@@ -79,9 +79,9 @@ impl<'t> Match<'t> {
 /// different strings. For example `"figaro"` and `"Figaro?"` have a similarity of
 /// 1.0.
 pub fn similarity(a: &str, b: &str) -> f32 {
-    lazy_static! {
-        static ref RX: Regex = Regex::new(r"^|$|\W+").unwrap();
-    }
+    static RX: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"^|$|\W+").unwrap()
+    });
     let a = RX.replace_all(a, "  ").to_lowercase();
     let b = RX.replace_all(b, "  ").to_lowercase();
     let ta = trigrams(&a);
