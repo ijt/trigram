@@ -15,9 +15,7 @@ pub fn find_words_iter<'n, 'h>(
     haystack: &'h str,
     threshold: f64,
 ) -> Matches<'n, 'h> {
-    static WORD_RX: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"\w+").unwrap()
-    });
+    static WORD_RX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\w+").unwrap());
     let words = WORD_RX.find_iter(haystack);
     Matches {
         needle,
@@ -61,13 +59,16 @@ pub struct Match<'t> {
 }
 
 impl<'t> Match<'t> {
-    #[must_use] pub fn start(self) -> usize {
+    #[must_use]
+    pub fn start(self) -> usize {
         self.start
     }
-    #[must_use] pub fn end(self) -> usize {
+    #[must_use]
+    pub fn end(self) -> usize {
         self.end
     }
-    #[must_use] pub fn as_str(self) -> &'t str {
+    #[must_use]
+    pub fn as_str(self) -> &'t str {
         self.text
     }
 }
@@ -77,10 +78,9 @@ impl<'t> Match<'t> {
 /// strings are normalized before comparison, so it is possible to get a score of 1.0 between
 /// different strings. For example `"figaro"` and `"Figaro?"` have a similarity of
 /// 1.0.
-#[must_use] pub fn similarity(a: &str, b: &str) -> f64 {
-    static RX: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"^|$|\W+").unwrap()
-    });
+#[must_use]
+pub fn similarity(a: &str, b: &str) -> f64 {
+    static RX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^|$|\W+").unwrap());
     let a = RX.replace_all(a, "  ").to_lowercase();
     let b = RX.replace_all(b, "  ").to_lowercase();
     let ta = trigrams(&a);
@@ -110,7 +110,8 @@ fn trigrams(s: &str) -> HashSet<&str> {
     let idxs = rune_indexes(s);
     (0..idxs.len() - 3)
         .map(|i| &s[idxs[i]..idxs[i + 3]])
-        .filter(|t| !t.ends_with("  ")).collect()
+        .filter(|t| !t.ends_with("  "))
+        .collect()
 }
 
 /// Returns a vec of all the indexes of characters within the string, plus a
