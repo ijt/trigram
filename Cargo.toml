@@ -3,6 +3,7 @@ authors = ["Issac Trotts <issac.trotts@gmail.com>"]
 description = "Trigram-based string similarity for fuzzy matching."
 documentation = "https://docs.rs/trigram"
 edition = "2018"
+rust-version = "1.40"
 homepage = "https://github.com/ijt/trigram"
 keywords = ["trigram", "string", "fuzzy", "matching"]
 license = "Apache-2.0"
