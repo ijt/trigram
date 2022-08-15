@@ -38,7 +38,7 @@ impl<'n, 'h> Iterator for Matches<'n, 'h> {
     type Item = Match<'h>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(m) = self.haystack_words.next() {
+        for m in self.haystack_words.by_ref() {
             let w = m.as_str();
             if similarity(self.needle, w) > self.threshold {
                 let m2 = Match {
@@ -95,8 +95,8 @@ fn jaccard<T>(s1: &HashSet<T>, s2: &HashSet<T>) -> f32
 where
     T: Hash + Eq,
 {
-    let i = s1.intersection(&s2).count() as f32;
-    let u = s1.union(&s2).count() as f32;
+    let i = s1.intersection(s2).count() as f32;
+    let u = s1.union(s2).count() as f32;
     if u == 0.0 {
         1.0
     } else {
@@ -108,7 +108,7 @@ where
 fn trigrams(s: &str) -> HashSet<&str> {
     // The filter is to match an idiosyncrasy of the Postgres trigram extension:
     // it doesn't count trigrams that end with two spaces.
-    let idxs = rune_indexes(&s);
+    let idxs = rune_indexes(s);
     HashSet::from_iter(
         (0..idxs.len() - 3)
             .map(|i| &s[idxs[i]..idxs[i + 3]])
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn empty() {
-        assert_eq!(similarity(&"", &""), 1.0, "checking similarity of '' to ''");
+        assert_eq!(similarity("", ""), 1.0, "checking similarity of '' to ''");
     }
 
     #[test]
@@ -139,7 +139,7 @@ mod tests {
         let strs = vec!["", "a", "ab", "abc", "abcd"];
         for a in strs {
             assert_eq!(
-                similarity(&a, &a),
+                similarity(a, a),
                 1.0,
                 "checking similarity of '{}' to itself",
                 a
@@ -154,14 +154,14 @@ mod tests {
             let vb = vec!["def", "efgh"];
             for b in vb {
                 assert_eq!(
-                    similarity(&a, &b),
+                    similarity(a, b),
                     0.0,
                     "checking that '{}' and '{}' have similarity of zero",
                     a,
                     b
                 );
                 assert_eq!(
-                    similarity(&b, &a),
+                    similarity(b, a),
                     0.0,
                     "checking that '{}' and '{}' have similarity of zero",
                     b,
@@ -173,14 +173,14 @@ mod tests {
 
     #[test]
     fn non_ascii_unicode() {
-        assert_eq!(similarity(&"🐕", &"🐕"), 1.0, "dog matches dog");
+        assert_eq!(similarity("🐕", "🐕"), 1.0, "dog matches dog");
         assert_eq!(
-            similarity(&"ö`üǜ", &"asd"),
+            similarity("ö`üǜ", "asd"),
             0.0,
             "no match between ö`üǜ and asd"
         );
         assert_eq!(
-            similarity(&"ö`üǜ", &"ouu"),
+            similarity("ö`üǜ", "ouu"),
             0.0,
             "no match between ö`üǜ… and ouu"
         );
@@ -195,30 +195,30 @@ mod tests {
     #[test]
     fn fuzzy_matches() {
         // Check for agreement with answers given by the postgres pg_trgm similarity function.
-        assert_eq!(similarity(&"a", &"ab"), 0.25, "checking a and ab");
-        assert_eq!(similarity(&"foo", &"food"), 0.5, "checking foo and food");
+        assert_eq!(similarity("a", "ab"), 0.25, "checking a and ab");
+        assert_eq!(similarity("foo", "food"), 0.5, "checking foo and food");
         assert_eq!(
-            similarity(&"bar", &"barred"),
+            similarity("bar", "barred"),
             0.375,
             "checking bar and barred"
         );
         assert_eq!(
-            similarity(&"ing bear", &"ing boar"),
+            similarity("ing bear", "ing boar"),
             0.5,
             "checking ing bear and ing boar"
         );
         assert_eq!(
-            similarity(&"dancing bear", &"dancing boar"),
+            similarity("dancing bear", "dancing boar"),
             0.625,
             "checking dancing bear and dancing boar"
         );
         assert_eq!(
-            similarity(&"sir sly", &"srsly"),
+            similarity("sir sly", "srsly"),
             0.3,
             "checking sir sly and srsly"
         );
         assert_eq!(
-            similarity(&"same, but different?", &"same but different"),
+            similarity("same, but different?", "same but different"),
             1.0,
             "checking same but different"
         );
