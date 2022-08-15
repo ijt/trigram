@@ -1,24 +1,21 @@
 /*!
 The trigram library computes the similarity of strings, inspired by the similarity function in the
-[Postgresql pg_trgm extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
+[Postgresql `pg_trgm` extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
 */
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashSet;
 use std::hash::Hash;
-use std::iter::FromIterator;
 
 /// Iterates over fuzzy matches of one string against the words in another, such
 /// that the similarity is over some threshold, for example 0.3.
 pub fn find_words_iter<'n, 'h>(
     needle: &'n str,
     haystack: &'h str,
-    threshold: f32,
+    threshold: f64,
 ) -> Matches<'n, 'h> {
-    lazy_static! {
-        static ref WORD_RX: Regex = Regex::new(r"\w+").unwrap();
-    }
+    static WORD_RX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\w+").unwrap());
     let words = WORD_RX.find_iter(haystack);
     Matches {
         needle,
@@ -31,14 +28,14 @@ pub fn find_words_iter<'n, 'h>(
 pub struct Matches<'n, 'h> {
     needle: &'n str,
     haystack_words: regex::Matches<'static, 'h>,
-    threshold: f32,
+    threshold: f64,
 }
 
 impl<'n, 'h> Iterator for Matches<'n, 'h> {
     type Item = Match<'h>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(m) = self.haystack_words.next() {
+        for m in self.haystack_words.by_ref() {
             let w = m.as_str();
             if similarity(self.needle, w) > self.threshold {
                 let m2 = Match {
@@ -53,7 +50,7 @@ impl<'n, 'h> Iterator for Matches<'n, 'h> {
     }
 }
 
-/// This is the same as regex::Match.
+/// This is the same as `regex::Match`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Match<'t> {
     text: &'t str,
@@ -62,12 +59,15 @@ pub struct Match<'t> {
 }
 
 impl<'t> Match<'t> {
+    #[must_use]
     pub fn start(self) -> usize {
         self.start
     }
+    #[must_use]
     pub fn end(self) -> usize {
         self.end
     }
+    #[must_use]
     pub fn as_str(self) -> &'t str {
         self.text
     }
@@ -78,10 +78,9 @@ impl<'t> Match<'t> {
 /// strings are normalized before comparison, so it is possible to get a score of 1.0 between
 /// different strings. For example `"figaro"` and `"Figaro?"` have a similarity of
 /// 1.0.
-pub fn similarity(a: &str, b: &str) -> f32 {
-    lazy_static! {
-        static ref RX: Regex = Regex::new(r"^|$|\W+").unwrap();
-    }
+#[must_use]
+pub fn similarity(a: &str, b: &str) -> f64 {
+    static RX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^|$|\W+").unwrap());
     let a = RX.replace_all(a, "  ").to_lowercase();
     let b = RX.replace_all(b, "  ").to_lowercase();
     let ta = trigrams(&a);
@@ -90,13 +89,13 @@ pub fn similarity(a: &str, b: &str) -> f32 {
 }
 
 /// Jaccard similarity between two sets.
-/// https://en.wikipedia.org/wiki/Jaccard_index
-fn jaccard<T>(s1: &HashSet<T>, s2: &HashSet<T>) -> f32
+/// <https://en.wikipedia.org/wiki/Jaccard_index>
+fn jaccard<T>(s1: &HashSet<T>, s2: &HashSet<T>) -> f64
 where
     T: Hash + Eq,
 {
-    let i = s1.intersection(&s2).count() as f32;
-    let u = s1.union(&s2).count() as f32;
+    let i = s1.intersection(s2).count() as f64;
+    let u = s1.union(s2).count() as f64;
     if u == 0.0 {
         1.0
     } else {
@@ -108,12 +107,11 @@ where
 fn trigrams(s: &str) -> HashSet<&str> {
     // The filter is to match an idiosyncrasy of the Postgres trigram extension:
     // it doesn't count trigrams that end with two spaces.
-    let idxs = rune_indexes(&s);
-    HashSet::from_iter(
-        (0..idxs.len() - 3)
-            .map(|i| &s[idxs[i]..idxs[i + 3]])
-            .filter(|t| !t.ends_with("  ")),
-    )
+    let idxs = rune_indexes(s);
+    (0..idxs.len() - 3)
+        .map(|i| &s[idxs[i]..idxs[i + 3]])
+        .filter(|t| !t.ends_with("  "))
+        .collect()
 }
 
 /// Returns a vec of all the indexes of characters within the string, plus a
@@ -131,7 +129,7 @@ mod tests {
 
     #[test]
     fn empty() {
-        assert_eq!(similarity(&"", &""), 1.0, "checking similarity of '' to ''");
+        assert_eq!(similarity("", ""), 1.0, "checking similarity of '' to ''");
     }
 
     #[test]
@@ -139,7 +137,7 @@ mod tests {
         let strs = vec!["", "a", "ab", "abc", "abcd"];
         for a in strs {
             assert_eq!(
-                similarity(&a, &a),
+                similarity(a, a),
                 1.0,
                 "checking similarity of '{}' to itself",
                 a
@@ -154,14 +152,14 @@ mod tests {
             let vb = vec!["def", "efgh"];
             for b in vb {
                 assert_eq!(
-                    similarity(&a, &b),
+                    similarity(a, b),
                     0.0,
                     "checking that '{}' and '{}' have similarity of zero",
                     a,
                     b
                 );
                 assert_eq!(
-                    similarity(&b, &a),
+                    similarity(b, a),
                     0.0,
                     "checking that '{}' and '{}' have similarity of zero",
                     b,
@@ -173,14 +171,14 @@ mod tests {
 
     #[test]
     fn non_ascii_unicode() {
-        assert_eq!(similarity(&"🐕", &"🐕"), 1.0, "dog matches dog");
+        assert_eq!(similarity("🐕", "🐕"), 1.0, "dog matches dog");
         assert_eq!(
-            similarity(&"ö`üǜ", &"asd"),
+            similarity("ö`üǜ", "asd"),
             0.0,
             "no match between ö`üǜ and asd"
         );
         assert_eq!(
-            similarity(&"ö`üǜ", &"ouu"),
+            similarity("ö`üǜ", "ouu"),
             0.0,
             "no match between ö`üǜ… and ouu"
         );
@@ -195,30 +193,30 @@ mod tests {
     #[test]
     fn fuzzy_matches() {
         // Check for agreement with answers given by the postgres pg_trgm similarity function.
-        assert_eq!(similarity(&"a", &"ab"), 0.25, "checking a and ab");
-        assert_eq!(similarity(&"foo", &"food"), 0.5, "checking foo and food");
+        assert_eq!(similarity("a", "ab"), 0.25, "checking a and ab");
+        assert_eq!(similarity("foo", "food"), 0.5, "checking foo and food");
         assert_eq!(
-            similarity(&"bar", &"barred"),
+            similarity("bar", "barred"),
             0.375,
             "checking bar and barred"
         );
         assert_eq!(
-            similarity(&"ing bear", &"ing boar"),
+            similarity("ing bear", "ing boar"),
             0.5,
             "checking ing bear and ing boar"
         );
         assert_eq!(
-            similarity(&"dancing bear", &"dancing boar"),
+            similarity("dancing bear", "dancing boar"),
             0.625,
             "checking dancing bear and dancing boar"
         );
         assert_eq!(
-            similarity(&"sir sly", &"srsly"),
+            similarity("sir sly", "srsly"),
             0.3,
             "checking sir sly and srsly"
         );
         assert_eq!(
-            similarity(&"same, but different?", &"same but different"),
+            similarity("same, but different?", "same but different"),
             1.0,
             "checking same but different"
         );

@@ -8,5 +8,5 @@ fn main() {
     }
     let a = args[1].as_str();
     let b = args[2].as_str();
-    println!("{}", similarity(&a, &b));
+    println!("{}", similarity(a, b));
 }
