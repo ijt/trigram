@@ -1,20 +1,19 @@
 /*!
 The trigram library computes the similarity of strings, inspired by the similarity function in the
-[Postgresql pg_trgm extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
+[Postgresql `pg_trgm` extension](https://www.postgresql.org/docs/9.1/pgtrgm.html).
 */
 
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashSet;
 use std::hash::Hash;
-use std::iter::FromIterator;
 
 /// Iterates over fuzzy matches of one string against the words in another, such
 /// that the similarity is over some threshold, for example 0.3.
 pub fn find_words_iter<'n, 'h>(
     needle: &'n str,
     haystack: &'h str,
-    threshold: f32,
+    threshold: f64,
 ) -> Matches<'n, 'h> {
     static WORD_RX: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r"\w+").unwrap()
@@ -31,7 +30,7 @@ pub fn find_words_iter<'n, 'h>(
 pub struct Matches<'n, 'h> {
     needle: &'n str,
     haystack_words: regex::Matches<'static, 'h>,
-    threshold: f32,
+    threshold: f64,
 }
 
 impl<'n, 'h> Iterator for Matches<'n, 'h> {
@@ -53,7 +52,7 @@ impl<'n, 'h> Iterator for Matches<'n, 'h> {
     }
 }
 
-/// This is the same as regex::Match.
+/// This is the same as `regex::Match`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Match<'t> {
     text: &'t str,
@@ -62,13 +61,13 @@ pub struct Match<'t> {
 }
 
 impl<'t> Match<'t> {
-    pub fn start(self) -> usize {
+    #[must_use] pub fn start(self) -> usize {
         self.start
     }
-    pub fn end(self) -> usize {
+    #[must_use] pub fn end(self) -> usize {
         self.end
     }
-    pub fn as_str(self) -> &'t str {
+    #[must_use] pub fn as_str(self) -> &'t str {
         self.text
     }
 }
@@ -78,7 +77,7 @@ impl<'t> Match<'t> {
 /// strings are normalized before comparison, so it is possible to get a score of 1.0 between
 /// different strings. For example `"figaro"` and `"Figaro?"` have a similarity of
 /// 1.0.
-pub fn similarity(a: &str, b: &str) -> f32 {
+#[must_use] pub fn similarity(a: &str, b: &str) -> f64 {
     static RX: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r"^|$|\W+").unwrap()
     });
@@ -90,13 +89,13 @@ pub fn similarity(a: &str, b: &str) -> f32 {
 }
 
 /// Jaccard similarity between two sets.
-/// https://en.wikipedia.org/wiki/Jaccard_index
-fn jaccard<T>(s1: &HashSet<T>, s2: &HashSet<T>) -> f32
+/// <https://en.wikipedia.org/wiki/Jaccard_index>
+fn jaccard<T>(s1: &HashSet<T>, s2: &HashSet<T>) -> f64
 where
     T: Hash + Eq,
 {
-    let i = s1.intersection(s2).count() as f32;
-    let u = s1.union(s2).count() as f32;
+    let i = s1.intersection(s2).count() as f64;
+    let u = s1.union(s2).count() as f64;
     if u == 0.0 {
         1.0
     } else {
@@ -109,11 +108,9 @@ fn trigrams(s: &str) -> HashSet<&str> {
     // The filter is to match an idiosyncrasy of the Postgres trigram extension:
     // it doesn't count trigrams that end with two spaces.
     let idxs = rune_indexes(s);
-    HashSet::from_iter(
-        (0..idxs.len() - 3)
-            .map(|i| &s[idxs[i]..idxs[i + 3]])
-            .filter(|t| !t.ends_with("  ")),
-    )
+    (0..idxs.len() - 3)
+        .map(|i| &s[idxs[i]..idxs[i + 3]])
+        .filter(|t| !t.ends_with("  ")).collect()
 }
 
 /// Returns a vec of all the indexes of characters within the string, plus a
